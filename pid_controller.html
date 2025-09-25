@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PID Control Lecture - Static Prototype</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+</head>
+<body>
+    <!-- Sidebar Toggle Button -->
+    <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Left Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3>Table of Contents</h3>
+        </div>
+        <nav class="sidebar-nav">
+            <ul>
+                <li><a href="index.html">🏠 Index</a></li>
+                <li><a href="pid_controller.html" class="active">📚 Lecture 1: PID Controller</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <div class="container main-content" id="mainContent">
+        <header>
+            <h1>PID Controllers</h1>
+            <p class="subtitle">Proportional–Integral–Derivative Control Theory</p>
+            <div class="colab-link">
+                <a href="#" id="colab-notebook-link" class="btn-colab" target="_blank">
+                    📓 Open Interactive Notebook in Google Colab
+                </a>
+                <br><br>
+                <a href="pid.pdf" class="btn-pdf" target="_blank">
+                    📄 View Original Lecture Slides (PDF)
+                </a>
+            </div>
+        </header>
+
+        <nav class="toc">
+            <h3>Table of Contents</h3>
+            <ul>
+                <li><a href="#introduction">Introduction</a></li>
+                <li><a href="#pid-structure">PID Control Structure</a></li>
+                <li><a href="#closed-loop">Closed-Loop Transfer Function</a></li>
+                <li><a href="#proportional">Proportional Control</a></li>
+                <li><a href="#integral">Integral Feedback</a></li>
+                <li><a href="#derivative">Derivative Action</a></li>
+            </ul>
+        </nav>
+
+        <main class="content">
+            <section id="introduction">
+                <h2>Earlier</h2>
+                <p>Linear System: $x = A x + B u$ , $y = C x + D u$</p>
+                <p>Input: $u(t) = e^{s t}$ (complex $s \neq \lambda (A)$ ).</p>
+                <p>Steady-state output: $y_{ss}(t) = \underbrace{\left[D + C(s) - A\right]^{-1} B_{s}}_{\text{Transfer Function}} u(t)$</p>
+
+                <h2>Last lecture</h2>
+                <p>For an ODE with output $y$ and input $u$ of the form</p>
+
+                <div class="math-block">
+                    $$\frac{d^{n} y}{d t^{n}} + a_{1} \frac{d^{n - 1} y}{d t^{n - 1}} + \dots + a_{n} y$$
+                    $$= b_{0} \frac{d^{m} u}{d t^{m}} + b_{1} \frac{d^{m - 1} y}{d t^{m - 1}} + \dots + b_{m} u$$
+                </div>
+
+                <p>the transfer function is</p>
+                <div class="math-block">
+                    $$ G(s) = \frac{b(s)}{a(s)} = \frac{b_{0} s^{m} + b_{1} s^{m - 1} + \cdots + b_{m}}{s^{n} + a_{1} s^{n - 1} + \cdots + a_{n}} $$
+                </div>
+
+                <ul>
+                    <li>Poles of $G =$ roots of $a(s) = 0$</li>
+                    <li>Zeros of $G =$ roots of $b(s) = 0$</li>
+                    <li>"Poles of $G =$ eigenvalues of $A$"</li>
+                </ul>
+            </section>
+
+            <section id="pid-structure">
+                <h2>Proportional–Integral–Derivative (PID) Control</h2>
+                <p>Recall the control structure from before: we used <strong>integral action</strong>.</p>
+
+                <div class="diagram">
+                    <img src="images/pid_1.png" alt="PID block diagram" style="max-width: 70%; height: auto;">
+                </div>
+
+                <p>Now we will work with the <strong>transfer function representation</strong> of the system and controller. Additionally, we will extend the controller structure.</p>
+
+                <div class="diagram">
+                    <img src="images/pid_2.png" alt="PID block diagram 2" style="max-width: 70%; height: auto;">
+                </div>
+
+                <div class="key-equations">
+                    <h3>Key Equations:</h3>
+                    <p><strong>Error signal:</strong></p>
+                    <div class="math-block">
+                        $$e(t) = r(t) - y(t)$$
+                    </div>
+
+                    <p><strong>Control input:</strong></p>
+                    <div class="math-block">
+                        $$u(t) = k_p e(t) + k_i \int e(t) \, dt + k_d \frac{de(t)}{dt}$$
+                    </div>
+
+                    <p><strong>Transfer function from $e$ to $u$:</strong></p>
+                    <div class="math-block">
+                        $$C(s) = k_p + \frac{k_i}{s} + k_d s$$
+                    </div>
+                </div>
+
+                <div class="interpretation">
+                    <h3>Another Interpretation of P, I, D terms:</h3>
+
+                    <div class="diagram">
+                        <img src="images/pid_3.png" alt="PID term interpretation" style="max-width: 70%; height: auto;">
+                    </div>
+
+                    <ul>
+                        <li><strong>Proportional</strong>: part depends on the instantaneous error.</li>
+                        <li><strong>Integral</strong>: part based on error up to time $t$.</li>
+                        <li><strong>Derivative</strong>: part estimates the growth of the error.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="closed-loop">
+                <h2>Closed-Loop Transfer Function with a PID controller</h2>
+
+                <div class="diagram">
+                    <img src="images/pid_4.png" alt="PID block diagram 4" style="max-width: 70%; height: auto;">
+                </div>
+
+                <p>The transfer function from reference $r$ to output $y$ is:</p>
+                <div class="math-block">
+                    $$G_{ry}(s) = \frac{P(s)C(s)}{1 + P(s)C(s)}$$
+                </div>
+                <p>Steady-state gain for a stable system under step input is $H(0)$.</p>
+            </section>
+
+            <section id="proportional">
+                <h2>Proportional Control Analysis</h2>
+                <p>First, consider <strong>pure proportional feedback</strong> (i.e., $k_i = 0$ and $k_d = 0$).</p>
+
+                <p>The steady-state output due to a unit step reference input is equal to:</p>
+                <div class="math-block">
+                    $$y_{ss} = G_{ry}(0) \cdot 1 = \frac{C(0) P(0)}{1 + C(0) P(0)}$$
+                </div>
+
+                <p>Since</p>
+                <div class="math-block">
+                    $$C(s) = k_p \;\;\; \Rightarrow \;\;\; C(0) = k_p,$$
+                </div>
+
+                <p>we have</p>
+                <div class="math-block">
+                    $$y_{ss} = \frac{k_p P(0)}{1 + k_p P(0)}.$$
+                </div>
+
+                <p><em>One can adjust $k_p$ to make $y_{ss}$ as close to 1 as possible.</em></p>
+
+                <div class="example">
+                    <h3>Example (with P-term only)</h3>
+                    <div class="math-block">
+                        $$P(s) = \frac{1}{(s+1)^3}$$
+                    </div>
+
+                    <div class="diagram">
+                        <img src="images/pid_5.png" alt="PID example" style="max-width: 70%; height: auto;">
+                    </div>
+
+                    <p><strong>Observations when increasing $k_p$:</strong></p>
+                    <ul>
+                        <li>reduces the steady-state error,</li>
+                        <li>but also introduces (larger) oscillations and overshoot.</li>
+                    </ul>
+                </div>
+
+                <div class="colab-exercise">
+                    <div class="exercise-header">
+                        <h4>🔬 Interactive Exercise</h4>
+                        <a href="#" class="btn-small" onclick="openColabSection('proportional')">Try this in Colab →</a>
+                    </div>
+                    <p>Experiment with different $K_p$ values and observe the trade-off between steady-state error and overshoot.</p>
+                </div>
+            </section>
+
+            <section id="integral">
+                <h2>Integral Feedback</h2>
+                <p>Introduce <strong>integral feedback</strong>:</p>
+                <div class="math-block">
+                    $$C(s) = k_p + \frac{k_i}{s}$$
+                </div>
+
+                <p>The closed-loop transfer function:</p>
+                <div class="math-block">
+                    $$G_{ry}(s) = \frac{\left(k_p + \tfrac{k_i}{s}\right) P(s)}{1 + P(s)\left(k_p + \tfrac{k_i}{s}\right)}$$
+                </div>
+
+                <p>Simplify:</p>
+                <div class="math-block">
+                    $$G_{ry}(s) = \frac{(k_p s + k_i) P(s)}{s + P(s)(k_p s + k_i)}$$
+                </div>
+
+                <p>The steady-state output due to unit step reference input:</p>
+                <div class="math-block">
+                    $$G_{ry}(0) = \frac{k_i P(0)}{k_i P(0)} = 1$$
+                </div>
+
+                <div class="key-results">
+                    <h3>Key Results:</h3>
+                    <ul>
+                        <li><strong>Perfect reference tracking</strong></li>
+                        <li><strong>Independent from the plant parameters</strong></li>
+                    </ul>
+                    <p><strong>Recall:</strong> This is an important result. But, it is not news for us. We already had seen this fact. We just derived it in a different way now.</p>
+                </div>
+
+                <div class="example">
+                    <h3>Example (with P and I terms)</h3>
+                    <p>Same plant as before. Fixed $k_p = 2$ and vary $k_i$:</p>
+
+                    <div class="diagram">
+                        <img src="images/pid_6.png" alt="PID example with I term" style="max-width: 70%; height: auto;">
+                    </div>
+
+                    <ul>
+                        <li>Zero $k_i \Rightarrow$ non-zero steady-state error</li>
+                        <li>Nonzero $k_i \Rightarrow$ zero steady-state error</li>
+                        <li>As $k_i$ increases, the approach to the steady-state output is faster.</li>
+                        <li>As $k_i$ increases, the system becomes more oscillatory.</li>
+                    </ul>
+                </div>
+
+                <div class="disturbance-section">
+                    <h3>Disturbance Attenuation</h3>
+                    <p>Another useful property of integral action: disturbance attenuation.</p>
+
+                    <div class="diagram">
+                        <img src="images/pid_7.png" alt="PID disturbance attenuation" style="max-width: 70%; height: auto;">
+                    </div>
+
+                    <p>Assume $r = 0$ and $d$ is a unit step disturbance.</p>
+                    <p>Only integral action:</p>
+                    <div class="math-block">
+                        $$C(s) = \frac{k_i}{s}$$
+                    </div>
+
+                    <p>The closed-loop transfer function:</p>
+                    <div class="math-block">
+                        $$G_{dy}(s) = \frac{P(s)}{1 + P(s)C(s)} = \frac{s P(s)}{s + P(s) k_i}$$
+                    </div>
+
+                    <p>At steady state:</p>
+                    <div class="math-block">
+                        $$G_{dy}(0) = \frac{0}{P(0) k_i} = 0$$
+                    </div>
+                    <p>(Perfect disturbance rejection at steady state.)</p>
+                </div>
+
+                <div class="colab-exercise">
+                    <div class="exercise-header">
+                        <h4>🔬 Interactive Exercise</h4>
+                        <a href="#" class="btn-small" onclick="openColabSection('integral')">Try this in Colab →</a>
+                    </div>
+                    <p>Compare PI control with P-only control and observe perfect tracking vs. steady-state error.</p>
+                </div>
+            </section>
+
+            <section id="derivative">
+                <h2>Derivative Action</h2>
+                <p>Let us now add the derivative term</p>
+                <div class="math-block">
+                    $$C(s) = k_p + \frac{k_i}{s} + k_d s$$
+                </div>
+
+                <p>Check the response under unit step reference $r$:</p>
+
+                <div class="diagram">
+                    <img src="images/pid_8.png" alt="PID example with D term" style="max-width: 70%; height: auto;">
+                </div>
+
+                <p>With increasing $k_d$, the closed-loop system becomes more damped.</p>
+
+                <div class="example">
+                    <h3>Example: Effect of the $k_d$-term</h3>
+                    <p>Let the reference be $r = 0$. We will analyze the free response of the closed-loop system.</p>
+
+                    <p><strong>Open-loop system:</strong></p>
+                    <div class="math-block">
+                        $$\ddot{y} + \alpha_1 \dot{y} + \alpha_2 y = u$$
+                    </div>
+
+                    <p><strong>Derivative control:</strong></p>
+                    <div class="math-block">
+                        $$u = k_d \dot{e} = k_d (\dot{r} - \dot{y}) = -k_d \dot{y}$$
+                    </div>
+
+                    <p><strong>Closed-loop system:</strong></p>
+                    <div class="math-block">
+                        $$\ddot{y} + (\alpha_1 + k_d)\dot{y} + \alpha_2 y = 0$$
+                    </div>
+
+                    <ul>
+                        <li>$\alpha_2$: unchanged $\;\;\Rightarrow\;\; \omega_n$: unchanged</li>
+                        <li>Choose $k_d$ to increase damping:
+                            <div class="math-block">
+                                $$\alpha_1 + k_d = 2 \zeta \omega_n$$
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="colab-exercise">
+                    <div class="exercise-header">
+                        <h4>🔬 Interactive Exercise</h4>
+                        <a href="#" class="btn-small" onclick="openColabSection('derivative')">Try this in Colab →</a>
+                    </div>
+                    <p>Explore how derivative action reduces overshoot and improves damping in PID control.</p>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <div class="footer-links">
+                <a href="#" id="full-colab-link" class="btn-colab" target="_blank">
+                    🚀 Complete Interactive PID Lab in Google Colab
+                </a>
+            </div>
+            <p>&copy; 2024 UT Austin - Interactive Control Lab</p>
+        </footer>
+    </div>
+
+    <script>
+        // Sidebar functionality
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const mainContent = document.getElementById('mainContent');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            sidebarOverlay.classList.toggle('active');
+            sidebarToggle.classList.toggle('active');
+            mainContent.classList.toggle('sidebar-active');
+        }
+
+        sidebarToggle.addEventListener('click', toggleSidebar);
+        sidebarOverlay.addEventListener('click', toggleSidebar);
+
+        // Close sidebar on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && sidebar.classList.contains('active')) {
+                toggleSidebar();
+            }
+        });
+
+        // Google Colab notebook URL
+        const COLAB_NOTEBOOK_URL = "https://colab.research.google.com/drive/1dBcCitUkaAOhWu0WfdUDuTRwNPFwpiqE?usp=sharing";
+
+        // Set all Colab links
+        document.getElementById('colab-notebook-link').href = COLAB_NOTEBOOK_URL;
+        document.getElementById('full-colab-link').href = COLAB_NOTEBOOK_URL;
+
+        // Function to open specific sections in Colab (would need anchors in the notebook)
+        function openColabSection(section) {
+            window.open(COLAB_NOTEBOOK_URL + '#scrollTo=' + section, '_blank');
+        }
+
+        // Smooth scrolling for internal links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
