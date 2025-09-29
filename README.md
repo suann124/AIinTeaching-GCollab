@@ -10,7 +10,6 @@ This prototype demonstrates a **static lecture webpage** linked to an **interact
 
 ## 📁 Files
 
-- `index.html` - Main static webpage with PID theory
+- `pid_controller.html` - Main static webpage with PID theory
 - `styles.css` - Modern, responsive styling
-- `PID_Interactive_Lab.ipynb` - Complete interactive notebook
 - `README.md` - This file
